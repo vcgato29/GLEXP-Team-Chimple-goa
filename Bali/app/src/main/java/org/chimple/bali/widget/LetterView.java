@@ -17,10 +17,7 @@
 package org.chimple.bali.widget;
 
 import android.content.Context;
-import android.content.res.AssetFileDescriptor;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.media.MediaPlayer;
+import android.speech.tts.TextToSpeech;
 import android.support.annotation.AttrRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -35,14 +32,14 @@ import android.widget.TextView;
 
 import org.chimple.bali.R;
 import org.chimple.bali.db.entity.Unit;
-
-import java.io.IOException;
+import org.chimple.bali.service.TextToSpeechService;
 
 public class LetterView extends FrameLayout {
     private Unit mLetter;
     private View mSoundFab;
     private TextView mTextView;
     private Context mContext;
+    TextToSpeechService textToSpeechService = new TextToSpeechService(getContext());
 
     private final View.OnClickListener mOnClickListener = new View.OnClickListener() {
         @Override
@@ -54,27 +51,16 @@ public class LetterView extends FrameLayout {
     private void playSound() {
         mSoundFab.setEnabled(false);
         mTextView.setEnabled(false);
-        MediaPlayer mediaPlayer = new MediaPlayer();
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                mSoundFab.setEnabled(true);
-                mTextView.setEnabled(true);
-                mediaPlayer.release();
-//                    CardStatusViewModel cardStatusViewModel = ViewModelProviders.of(getActivity()).get(CardStatusViewModel.class);
-//                    cardStatusViewModel.viewed(true);
-            }
-        });
+
+        if (textToSpeechService != null) {
+            mSoundFab.setEnabled(true);
+            mTextView.setEnabled(true);
+        }
         try {
-            AssetFileDescriptor afd = mContext.getAssets().openFd(mLetter.sound);
-            mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(),
-                    afd.getLength());
-            afd.close();
-            mediaPlayer.prepare();
-            mediaPlayer.start();
-        } catch (IOException e) {
+            // Use TTS engine to play audio
+            textToSpeechService.convertTextToSpeech(mLetter.name, TextToSpeech.QUEUE_FLUSH, null, null);
+        } catch (Exception e) {
             e.printStackTrace();
-            mediaPlayer.release();
             mSoundFab.setEnabled(true);
             mTextView.setEnabled(true);
         }

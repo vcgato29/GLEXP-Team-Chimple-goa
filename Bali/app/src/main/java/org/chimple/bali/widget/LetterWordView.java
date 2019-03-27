@@ -18,9 +18,8 @@ package org.chimple.bali.widget;
 
 import android.animation.ObjectAnimator;
 import android.content.Context;
-import android.content.res.AssetFileDescriptor;
 import android.graphics.drawable.Drawable;
-import android.media.MediaPlayer;
+import android.speech.tts.TextToSpeech;
 import android.support.annotation.AttrRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -34,37 +33,26 @@ import android.widget.TextView;
 
 import org.chimple.bali.R;
 import org.chimple.bali.db.entity.Unit;
-
-import java.io.IOException;
+import org.chimple.bali.service.TextToSpeechService;
 
 public class LetterWordView extends FrameLayout{
     private Unit mLetter;
     private Unit mWord;
     private FloatingActionButton mSoundFab;
     private Context mContext;
+    TextToSpeechService textToSpeechService = new TextToSpeechService(getContext());
 
     private final View.OnClickListener mOnClickListener = new View.OnClickListener() {
 
         @Override
         public void onClick(View view) {
-            MediaPlayer mediaPlayer = new MediaPlayer();
-            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-                @Override
-                public void onCompletion(MediaPlayer mediaPlayer) {
-                    view.setEnabled(true);
-//                    CardStatusViewModel cardStatusViewModel = ViewModelProviders.of(getActivity()).get(CardStatusViewModel.class);
-//                    cardStatusViewModel.viewed(true);
-                }
-            });
+            if(textToSpeechService != null) {
+                view.setEnabled(true);
+            }
             try {
-                //AssetFileDescriptor afd = mContext.getAssets().openFd(mWord.sound);
-                AssetFileDescriptor afd = mContext.getAssets().openFd("swa/audio/a.mp3");
-                mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(),
-                        afd.getLength());
-                afd.close();
-                mediaPlayer.prepare();
-                mediaPlayer.start();
-            } catch (IOException e) {
+                // Use TTS engine to play audio
+                textToSpeechService.convertTextToSpeech("a", TextToSpeech.QUEUE_FLUSH, null, null);
+            } catch (Exception e) {
                 e.printStackTrace();
             } finally {
                 view.setEnabled(false);

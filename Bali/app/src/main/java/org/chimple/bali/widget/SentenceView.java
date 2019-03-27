@@ -17,9 +17,8 @@
 package org.chimple.bali.widget;
 
 import android.content.Context;
-import android.content.res.AssetFileDescriptor;
 import android.graphics.drawable.Drawable;
-import android.media.MediaPlayer;
+import android.speech.tts.TextToSpeech;
 import android.support.annotation.AttrRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -33,6 +32,7 @@ import android.widget.TextView;
 
 import org.chimple.bali.R;
 import org.chimple.bali.db.entity.Unit;
+import org.chimple.bali.service.TextToSpeechService;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,20 +41,16 @@ public class SentenceView extends FrameLayout{
     private Unit mSentence;
     private FloatingActionButton mSoundFab;
     private Context mContext;
+    TextToSpeechService textToSpeechService = new TextToSpeechService(getContext());
 
     private final View.OnClickListener mOnClickListener = new View.OnClickListener() {
 
         @Override
         public void onClick(View view) {
-            MediaPlayer mediaPlayer = new MediaPlayer();
             try {
-                AssetFileDescriptor afd = mContext.getAssets().openFd(mSentence.sound);
-                mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(),
-                        afd.getLength());
-                afd.close();
-                mediaPlayer.prepare();
-                mediaPlayer.start();
-            } catch (IOException e) {
+                // Use TTS engine to play audio
+                textToSpeechService.convertTextToSpeech(mSentence.name, TextToSpeech.QUEUE_FLUSH, null, null);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }

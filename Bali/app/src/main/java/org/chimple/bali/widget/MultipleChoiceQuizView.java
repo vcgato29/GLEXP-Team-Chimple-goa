@@ -4,15 +4,10 @@ import android.arch.lifecycle.LifecycleActivity;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.ContextWrapper;
-import android.content.res.AssetFileDescriptor;
-import android.content.res.Resources;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
-import android.media.MediaPlayer;
+import android.speech.tts.TextToSpeech;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.CardView;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -24,9 +19,9 @@ import android.widget.TextView;
 import org.chimple.bali.R;
 import org.chimple.bali.db.entity.Unit;
 import org.chimple.bali.model.MultipleChoiceQuiz;
+import org.chimple.bali.service.TextToSpeechService;
 import org.chimple.bali.viewmodel.CardStatusViewModel;
 
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -51,6 +46,7 @@ public class MultipleChoiceQuizView extends FrameLayout {
     CardView mQuestionView;
     private View mcurrentSelectedView;
     private View mCorrectView;
+    TextToSpeechService textToSpeechService;
 
 
     public MultipleChoiceQuizView(Context context, MultipleChoiceQuiz mcq) {
@@ -133,7 +129,7 @@ public class MultipleChoiceQuizView extends FrameLayout {
             };
             mQuestionView.setOnClickListener(soundOnClickListener);
         }
-        
+
         OnClickListener checkOnClickListener = new OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -155,6 +151,8 @@ public class MultipleChoiceQuizView extends FrameLayout {
 
         FloatingActionButton checkFab = (FloatingActionButton) findViewById(R.id.checkFab);
         checkFab.setOnClickListener(checkOnClickListener);
+
+        textToSpeechService = new TextToSpeechService(getContext());
     }
 
     private void playSound(View view) {
@@ -170,23 +168,11 @@ public class MultipleChoiceQuizView extends FrameLayout {
         } else if(view.equals(mQuestionView)) {
             unit = mMcq.questionUnit;
         }
-        MediaPlayer mediaPlayer = new MediaPlayer();
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                mediaPlayer.release();
-            }
-        });
         try {
-            AssetFileDescriptor afd = getContext().getAssets().openFd(unit.sound);
-            mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(),
-                    afd.getLength());
-            afd.close();
-            mediaPlayer.prepare();
-            mediaPlayer.start();
-        } catch (IOException e) {
+            // Use TTS engine to play audio
+            textToSpeechService.convertTextToSpeech(unit.name, TextToSpeech.QUEUE_FLUSH, null, null);
+        } catch (Exception e) {
             e.printStackTrace();
-            mediaPlayer.release();
         }
     }
 
